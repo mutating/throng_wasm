@@ -19,6 +19,7 @@ dependencies = [
     'wasmtime>=25.0.0,<39',
     'packaging>=24.2',
     'resolvelib>=1.1,<1.2',
+    'microbenchmark>=0.0.3',
 ]
 classifiers = [
     "Operating System :: OS Independent",
