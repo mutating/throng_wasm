@@ -117,12 +117,7 @@ network request. Do not use that reserved name for project files.
 
 `cantok==0.0.43` and its transitive `dill==0.4.0` now install, including dill's
 three scripts. The memory filesystem supplies a working virtual `/dev/null`,
-but the guest still lacks `multiprocessing`, which dill imports. A separate,
-tested [getsources patch](tests/getsources-wasi.patch) defers
-dill loading until source lookup actually needs it and preserves the original
-`OSError` if dill cannot initialize. The plugin does **not** apply this patch
-automatically. See the [compatibility follow-up](tests/WASI_COMPATIBILITY.md)
-for the tested behavior and upstream patch instructions.
+but the guest still lacks `multiprocessing`, which dill imports.
 
 ### Memory-only storage
 
@@ -338,8 +333,7 @@ alias is not registered.
 
 This guest pytest check uses a small test project. The plugin's own full suite
 depends on host Wasmtime and concurrency facilities and currently stops during
-collection inside WASI. See [the full-suite compatibility report](tests/WASI_COMPATIBILITY.md)
-for actual attempts, installation errors, and a separately tested portable subset.
+collection inside WASI.
 
 ## Isolation and concurrency
 
@@ -457,19 +451,38 @@ ruff check throng_wasmtime tests
 ```
 
 The existing CI also runs strict mypy checks. The target is 100% statement **and
-branch** coverage of the plugin; benchmark scripts and the guest's CPython/
-linter implementations are not included in that number. The typing-only callback
-protocol signature has no implementation and is excluded from runtime coverage.
+branch** coverage of the plugin, including its reusable benchmark scenarios.
+The guest's CPython/linter implementations are not included in that number.
+The typing-only callback protocol signature has no implementation and is excluded
+from runtime coverage.
 
-Measurements use [microbenchmark](https://github.com/mutating/microbenchmark).
-See [the report](tests/BENCHMARKS.md), [memory-backend samples](tests/benchmark_memory_results.json)
-and [reproduction script](tests/benchmark.py). The bundled runtime works by default:
+Reusable scenarios live in `throng_wasmtime.benchmarks` and use
+[microbenchmark](https://github.com/mutating/microbenchmark), following
+[suby's benchmark organization](https://github.com/mutating/suby/blob/main/suby/benchmarks.py).
+Preparation installs the linters and creates identical project corpora before any
+timing starts. The context owns and cleans up the isolates and native fixture files:
 
-```sh
-uv venv --python 3.13.11 venv/native
-uv pip install --python venv/native/bin/python mypy==1.14.1 pyflakes==3.3.2 ruff==0.14.6
-python -m tests.benchmark --native-python venv/native/bin/python --number 10
+```python
+from throng_wasmtime import benchmarks
+
+with benchmarks.prepare(number=10) as suite:
+    result = suite.scenarios['mypy.100_files.wasm_reused'].run(warmup=2)
+    print(result.mean)
+    # suite.all is a microbenchmark.ScenarioGroup containing the prepared scenarios.
 ```
+
+`tests/benchmarks/test_benchmarks.py` measures those same scenarios through
+pytest-codspeed's `benchmark` fixture. It times one invocation, without nesting
+`Scenario.run()`'s repetition loop. Preparation and warmup stay outside the timed
+call; the cold-runtime scenario recompiles on every invocation. With ordinary
+pytest, including `-n auto`, these tests execute the workloads without collecting
+timings, and need no special flags or additional CI steps. To run just this folder:
+`python -m pytest tests/benchmarks`.
+
+The default suite has ten scenarios: native Python startup, three WASM startup
+modes, and mypy (with and without incremental cache) and Pyflakes on 1 and 100
+files. Passing `native_python=...` to `prepare()` adds the twelve native linter
+comparisons, including pure-Python mypy and native-only Ruff.
 
 Native and guest CPython versions and tool versions should match. The benchmark
 installs its linters through `install()` before timing (installation/network time
