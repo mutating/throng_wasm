@@ -34,7 +34,7 @@ jobs:
 
     - name: Run ruff
       shell: bash
-      run: ruff check throng_local_wasm
+      run: ruff check throng_wasmtime
 
     - name: Run ruff for tests
       shell: bash
@@ -53,7 +53,7 @@ jobs:
         --disallow-any-unimported
         --disallow-subclassing-any
         --warn-return-any
-        throng_local_wasm
+        throng_wasmtime
 
     - name: Run mypy for tests
       shell: bash
