@@ -3,16 +3,22 @@ requires = ["setuptools==68.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "throng_local_wasm"
+name = "throng_wasmtime"
 version = "0.0.1"
 authors = [
   { name="Evgeniy Blinov", email="zheni-b@yandex.ru" },
 ]
-description = ''
+description = 'Run CPython WASI commands in Wasmtime sandboxes through throng'
 readme = "README.md"
 requires-python = ">=3.8"
 dependencies = [
-    'throng>=0.0.1',
+    'throng>=0.0.3',
+    'dirstree>=0.0.12',
+    'pathspec>=0.12.0',
+    'cantok>=0.0.42',
+    'wasmtime>=25.0.0,<39',
+    'packaging>=24.2',
+    'resolvelib>=1.1,<1.2',
 ]
 classifiers = [
     "Operating System :: OS Independent",
@@ -44,20 +50,20 @@ keywords = [
 ]
 
 [tool.setuptools.package-data]
-"throng" = ["py.typed"]
+"throng_wasmtime" = ["py.typed", "data/python-3.13.11-wasi_sdk-24.zip", "data/RUNTIME_LICENSES.txt"]
 
 [tool.setuptools.packages.find]
-include = ["throng_local_wasm*"]
+include = ["throng_wasmtime*"]
 
 [tool.mutmut]
-paths_to_mutate=["throng_local_wasm"]
+paths_to_mutate=["throng_wasmtime"]
 
 [tool.coverage.run]
 branch = "${THRONG_COVERAGE_BRANCH-false}"
 omit = ["*tests*"]
 parallel = true
 plugins = ["coverage_pyver_pragma"]
-source = ["throng_local_wasm"]
+source = ["throng_wasmtime"]
 
 [tool.pytest.ini_options]
 norecursedirs = ["build", "mutants"]
@@ -67,6 +73,9 @@ lint.ignore = ['E501', 'E712', 'PTH123', 'PTH118', 'PLR2004', 'PTH107', 'SIM105'
 lint.select = ["ERA001", "YTT", "ASYNC", "BLE", "B", "A", "COM", "INP", "PIE", "T20", "PT", "RSE", "RET", "SIM", "SLOT", "TID252", "ARG", "PTH", "I", "C90", "N", "E", "W", "D201", "D202", "D419", "F", "PL", "PLE", "PLR", "PLW", "RUF", "TRY201", "TRY400", "TRY401"]
 lint.isort.combine-as-imports = true
 format.quote-style = "single"
+
+[project.entry-points.throng]
+wasm = "throng_wasmtime.plugin:wasm"
 
 [project.urls]
 'Source' = 'https://github.com/mutating/throng_local_wasm'
