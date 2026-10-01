@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="1200" viewBox="0 0 1200 1200" role="img" aria-labelledby="title desc">
+<title id="title">throng_local_wasm — radial WASM socket</title>
+<desc id="desc">Vector reconstruction of concept 2: a central WebAssembly module inside a purple medallion, surrounded by a segmented throng-style ring with eight radial nodes.</desc>
+<defs>
+  <symbol id="wasm" viewBox="0 0 24 24"><path d="M14.745,0c0,0.042,0,0.085,0,0.129c0,1.52-1.232,2.752-2.752,2.752c-1.52,0-2.752-1.232-2.752-2.752c0-0.045,0-0.087,0-0.129H0v24h24V0H14.745z M11.454,21.431l-1.169-5.783h-0.02l-1.264,5.783H7.39l-1.824-8.497h1.59l1.088,5.783h0.02l1.311-5.783h1.487l1.177,5.854h0.02l1.242-5.854h1.561l-2.027,8.497H11.454z M20.209,21.431l-0.542-1.891h-2.861l-0.417,1.891h-1.59l2.056-8.497h2.509l2.5,8.497H20.209z M17.812,15.028l-0.694,3.118h2.159l-0.796-3.118H17.812z" fill="currentColor"/></symbol>
+  <symbol id="throngWord" viewBox="0 0 1112.0 198.4">
+    <g transform="translate(-485.674,-95.0598)">
+      <path d="m 4400.595,-6120.8589 h -484 v -120 h 1100 v 120 h -484 v 1296 h -132 z m 833.9987,-120 h 132 v 624 h 792 v -624 h 132 v 1416 h -132 v -672 h -792 v 672 h -132 z m 1576.0003,624 h 280 q 104,0 168,-26 66,-26 102,-64 36,-38 48,-82 14,-44 14,-80 0,-36 -14,-80 -12,-44 -48,-82 -36,-38 -102,-64 -64,-26 -168,-26 h -280 z m -132,-624 h 372 q 28,0 76,2 48,2 104,12 56,10 114,32 58,22 104,64 46,42 76,106 30,64 30,156 0,102 -36,168 -34,66 -88,108 -52,40 -116,60 -64,20 -122,28 l 412,680 h -150 l -398,-672 h -246 v 672 h -132 z m 1094.001,708 q 0,-162 54,-298 54,-136 150,-234 96,-100 230,-156 136,-56 298,-56 162,0 296,56 136,56 232,156 96,98 150,234 54,136 54,298 0,162 -54,300 -54,136 -150,236 -96,98 -232,154 -134,54 -296,54 -162,0 -298,-54 -134,-56 -230,-154 -96,-100 -150,-236 -54,-138 -54,-300 z m 132,0 q 0,132 42,246 42,114 120,198 78,84 188,132 112,48 250,48 138,0 248,-48 112,-48 190,-132 78,-84 120,-198 42,-114 42,-246 0,-132 -42,-246 -42,-114 -120,-198 -78,-84 -190,-132 -110,-48 -248,-48 -138,0 -250,48 -110,48 -188,132 -78,84 -120,198 -42,114 -42,246 z m 1627.999,-708 h 170 l 862,1240 h 4 v -1240 h 132 v 1416 h -170 l -862,-1240 h -4 v 1240 h -132 z m 2724,1324 q -124,70 -258,98 -132,30 -270,30 -162,0 -298,-54 -134,-56 -230,-154 -96,-100 -150,-236 -54,-138 -54,-300 0,-162 54,-298 54,-136 150,-234 96,-100 230,-156 136,-56 298,-56 316,0 510,196 l -96,100 q -32,-38 -80,-70 -46,-34 -102,-56 -54,-24 -114,-36 -60,-14 -118,-14 -138,0 -250,48 -110,48 -188,132 -78,84 -120,198 -42,114 -42,246 0,132 42,246 42,114 120,198 78,84 188,132 112,48 250,48 114,0 214,-18 100,-18 182,-66 v -476 h -340 v -120 h 472 z" transform="matrix(0.1,0,0,0.1,-27.403846,698.98077)" fill="currentColor"/>
+    </g>
+  </symbol>
+</defs>
+<circle cx="600" cy="600" r="365" fill="none" stroke="#916f11" stroke-width="34" stroke-linecap="round" stroke-dasharray="200.669 86.001" transform="rotate(-11.25 600 600)"/>
+<path d="M600.00,235.00 L600.00,136.00" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="600.00" cy="95.00" r="46" fill="#916f11"/>
+<circle cx="600.00" cy="95.00" r="18.40" fill="#ffffff"/>
+<path d="M858.09,341.91 L928.10,271.90" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="957.09" cy="242.91" r="46" fill="#916f11"/>
+<circle cx="957.09" cy="242.91" r="18.40" fill="#ffffff"/>
+<path d="M965.00,600.00 L1064.00,600.00" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="1105.00" cy="600.00" r="46" fill="#916f11"/>
+<circle cx="1105.00" cy="600.00" r="18.40" fill="#ffffff"/>
+<path d="M858.09,858.09 L928.10,928.10" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="957.09" cy="957.09" r="46" fill="#916f11"/>
+<circle cx="957.09" cy="957.09" r="18.40" fill="#ffffff"/>
+<path d="M600.00,965.00 L600.00,1064.00" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="600.00" cy="1105.00" r="46" fill="#916f11"/>
+<circle cx="600.00" cy="1105.00" r="18.40" fill="#ffffff"/>
+<path d="M341.91,858.09 L271.90,928.10" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="242.91" cy="957.09" r="46" fill="#916f11"/>
+<circle cx="242.91" cy="957.09" r="18.40" fill="#ffffff"/>
+<path d="M235.00,600.00 L136.00,600.00" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="95.00" cy="600.00" r="46" fill="#916f11"/>
+<circle cx="95.00" cy="600.00" r="18.40" fill="#ffffff"/>
+<path d="M341.91,341.91 L271.90,271.90" stroke="#916f11" stroke-width="21.08" stroke-linecap="round"/>
+<circle cx="242.91" cy="242.91" r="46" fill="#916f11"/>
+<circle cx="242.91" cy="242.91" r="18.40" fill="#ffffff"/>
+<circle cx="600" cy="600" r="304" fill="#654FF0"/>
+<circle cx="600" cy="600" r="282" fill="#ffffff"/>
+<use href="#wasm" x="430.00" y="430.00" width="340" height="340" style="color:#654FF0"/>
+</svg>
