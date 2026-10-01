@@ -48,7 +48,7 @@ def test_archives_contain_runtime_and_notices(distribution_directory: Path) -> N
         metadata = BytesParser().parsebytes(archive.read(metadata_name))
         assert SpecifierSet(metadata['Requires-Python']) == SpecifierSet('>=3.8')
         requirements = {str(Requirement(value)) for value in metadata.get_all('Requires-Dist', [])}
-        assert {'throng>=0.0.3', 'dirstree>=0.0.12', 'pathspec>=0.12.0', 'microbenchmark>=0.0.3'} <= requirements
+        assert {'throng>=0.0.4', 'dirstree>=0.0.12', 'pathspec>=0.12.0', 'microbenchmark>=0.0.3'} <= requirements
         entry_points, = [name for name in archive.namelist() if name.endswith('.dist-info/entry_points.txt')]
         registration = ConfigParser()
         registration.read_string(archive.read(entry_points).decode())

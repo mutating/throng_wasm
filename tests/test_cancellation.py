@@ -502,22 +502,40 @@ def test_kill_during_cold_load_does_not_leave_guest_or_block_sibling(tmp_path: P
         sibling.kill()
 
 
-def test_cancel_module_start_section(wasm_home: Path) -> None:
+def test_cancel_module_start_section(wasm_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     (wasm_home / 'python.wasm').write_text('''(module
-      (func $initialize (loop $spin br $spin)) (start $initialize)
+      (import "wasi_snapshot_preview1" "sched_yield" (func $ready (result i32)))
+      (memory (export "memory") 1)
+      (func $initialize (drop (call $ready)) (loop $spin br $spin)) (start $initialize)
       (func (export "_start")))''')
     runtime = WasmRuntime(wasm_home)
     runtime._load()
     assert runtime._engine is not None
-    guard = threading.Timer(3, runtime._engine.increment_epoch)
-    guard.start()
+    interrupt = runtime._engine.increment_epoch
+    forced = Event()
+    token = SimpleToken()
+
+    def force_interrupt():
+        forced.set()
+        interrupt()
+
+    guard = threading.Timer(3, force_interrupt)
+
+    def cancel_from_start(*_args):
+        # Start both cancellation and the failsafe only after guest initialization begins.
+        guard.start()
+        token.cancel()
+
+    monkeypatch.setattr(MemoryWasi, 'w_sched_yield', cancel_from_start)
     try:
-        result = runtime.run([], MemoryPath(), TimeoutToken(0.05), Event())
+        result = runtime.run([], MemoryPath(), token, Event())
         assert result.returncode == 130
         assert result.killed_by_token
+        assert not forced.is_set(), 'Cancellation watchdog did not interrupt module initialization'
     finally:
         guard.cancel()
-        guard.join()
+        if guard.ident is not None:
+            guard.join()
 
 
 def test_cancel_inside_snapshot_file_is_atomic(tmp_path: Path, runtime: WasmRuntime, monkeypatch: pytest.MonkeyPatch) -> None:
