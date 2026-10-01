@@ -11,11 +11,11 @@ from throng import AbstractIsolate, AbstractManager
 from throng.abstracts.results import RunResultProtocol
 from throng.errors import CannotInstallDependencyError
 
-from throng_wasmtime.cancellation import Cancellation, StoppedError
-from throng_wasmtime.installer import ENVIRONMENT_DIRECTORY, install_packages
-from throng_wasmtime.memory import MemoryPath
-from throng_wasmtime.runtime import WasmResult, WasmRuntime, command_arguments
-from throng_wasmtime.state import DEFAULT_EXCLUDE, restore, snapshot
+from throng_wasm.cancellation import Cancellation, StoppedError
+from throng_wasm.installer import ENVIRONMENT_DIRECTORY, install_packages
+from throng_wasm.memory import MemoryPath
+from throng_wasm.runtime import WasmResult, WasmRuntime, command_arguments
+from throng_wasm.state import DEFAULT_EXCLUDE, restore, snapshot
 
 GUEST_ENVIRONMENT_SCRIPT = '''
 import json

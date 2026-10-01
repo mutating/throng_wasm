@@ -8,7 +8,7 @@ from zipfile import ZIP_STORED, ZipFile, ZipInfo
 from dirstree import Crawler
 from pathspec import PathSpec
 
-from throng_wasmtime.memory import MemoryPath
+from throng_wasm.memory import MemoryPath
 
 WINDOWS_DEVICES = {'CON', 'PRN', 'AUX', 'NUL', 'CONIN$', 'CONOUT$'} | {
     f'{prefix}{suffix}' for prefix in ('COM', 'LPT') for suffix in '123456789¹²³'

@@ -15,9 +15,9 @@ from zipfile import ZipFile
 
 from microbenchmark import Scenario, ScenarioGroup
 
-from throng_wasmtime.manager import WasmIsolate, WasmManager
-from throng_wasmtime.runtime import WasmRuntime
-from throng_wasmtime.state import snapshot
+from throng_wasm.manager import WasmIsolate, WasmManager
+from throng_wasm.runtime import WasmRuntime
+from throng_wasm.state import snapshot
 
 ITERATIONS = 10
 COLD_ITERATIONS = 3

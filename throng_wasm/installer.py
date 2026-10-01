@@ -35,9 +35,9 @@ from resolvelib import AbstractProvider, BaseReporter, Resolver
 from resolvelib.resolvers import ResolutionImpossible, ResolutionTooDeep
 from resolvelib.structs import RequirementInformation
 
-from throng_wasmtime.cancellation import Cancellation
-from throng_wasmtime.memory import MemoryPath
-from throng_wasmtime.state import restore
+from throng_wasm.cancellation import Cancellation
+from throng_wasm.memory import MemoryPath
+from throng_wasm.state import restore
 
 ENVIRONMENT_DIRECTORY = '.throng-wasm'
 

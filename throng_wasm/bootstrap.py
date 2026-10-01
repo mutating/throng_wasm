@@ -6,8 +6,8 @@ from threading import Lock
 from typing import Optional
 from zipfile import BadZipFile
 
-from throng_wasmtime.memory import MemoryPath
-from throng_wasmtime.state import restore
+from throng_wasm.memory import MemoryPath
+from throng_wasm.state import restore
 
 BUNDLE_RESOURCE = 'data/python-3.13.11-wasi_sdk-24.zip'
 BUNDLE_SHA256 = 'e99a617738ade87cd263aa46cace7173faa91b5de994499c83e49d132c40bb77'
@@ -16,7 +16,7 @@ _lock = Lock()
 
 
 def _read_bundle() -> bytes:
-    data = get_data('throng_wasmtime', BUNDLE_RESOURCE)
+    data = get_data('throng_wasm', BUNDLE_RESOURCE)
     if data is None:
         raise FileNotFoundError(f'Missing package resource: {BUNDLE_RESOURCE}')
     if hashlib.sha256(data).hexdigest() != BUNDLE_SHA256:
@@ -34,5 +34,5 @@ def ensure_bundle() -> MemoryPath:
                     raise ValueError('The packaged bundle is missing required runtime files.')
                 _bundle = runtime
             except (OSError, ValueError, BadZipFile) as exception:
-                raise RuntimeError(f'Could not load the packaged WASI runtime: {exception}. Reinstall throng_wasmtime or provide THRONG_WASM_HOME.') from exception
+                raise RuntimeError(f'Could not load the packaged WASI runtime: {exception}. Reinstall throng-wasm or provide THRONG_WASM_HOME.') from exception
         return _bundle

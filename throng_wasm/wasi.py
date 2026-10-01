@@ -19,7 +19,7 @@ from typing import Callable, List, Literal, Optional, Protocol, Sequence, Tuple,
 
 import wasmtime
 
-from throng_wasmtime.memory import MemoryPath, Node
+from throng_wasm.memory import MemoryPath, Node
 
 # WASI preview1 numeric values. Keep these as ints for callback ABI compatibility.
 ERRNO_SUCCESS = 0

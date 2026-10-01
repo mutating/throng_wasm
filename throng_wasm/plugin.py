@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 from throng import throng
 
-from throng_wasmtime.manager import WasmManager
+from throng_wasm.manager import WasmManager
 
 
 @throng.plugin

@@ -13,16 +13,16 @@ from weakref import finalize
 import wasmtime
 from cantok import AbstractToken, CancellationError
 
-from throng_wasmtime.bootstrap import ensure_bundle
-from throng_wasmtime.cancellation import (
+from throng_wasm.bootstrap import ensure_bundle
+from throng_wasm.cancellation import (
     POLL_INTERVAL,
     Background,
     Cancellation,
     StoppedError,
 )
-from throng_wasmtime.memory import MemoryPath, Node
-from throng_wasmtime.state import restore, snapshot
-from throng_wasmtime.wasi import MemoryWasi
+from throng_wasm.memory import MemoryPath, Node
+from throng_wasm.state import restore, snapshot
+from throng_wasm.wasi import MemoryWasi
 
 
 @dataclass
@@ -68,7 +68,7 @@ def command_arguments(command: str) -> List[str]:
     if executable in {'mypy', 'pyflakes', 'pycodestyle', 'flake8'}:
         return ['-m', executable, *args]
     if executable == 'ls':
-        source = get_data('throng_wasmtime', 'commands.py')
+        source = get_data('throng_wasm', 'commands.py')
         if source is None:
             raise FileNotFoundError('Missing package resource: commands.py')
         return ['-P', '-c', source.decode('utf-8') + '\nraise SystemExit(list_directory(sys.argv[1:]))', *args]
