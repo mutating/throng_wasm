@@ -27,7 +27,7 @@ add dependencies to that isolate. `ls` also runs inside WASM.
 
 ## Installation and runtime
 
-Requires throng 0.0.2 or newer. Host Python: 3.8 or newer, on a platform supported by the Wasmtime Python wheel.
+Requires throng 0.0.4 or newer. Host Python: 3.8 or newer, on a platform supported by the Wasmtime Python wheel.
 Install this repository with `python -m pip install -e .` or `uv pip install -e .`.
 The `throng` entry point discovers `wasm` automatically. The Wasmtime
 Python library is installed as a dependency; the Wasmtime CLI is not required.
@@ -52,7 +52,7 @@ location. Existing caches from older plugin versions are left untouched.
 
 ### Installing dependencies
 
-The throng 0.0.2 API is `isolate.install(*packages: str) -> None`:
+Install dependencies with `isolate.install(*packages: str) -> None`:
 
 ```python
 from throng import throng
@@ -246,7 +246,7 @@ is now a virtual path, not a host `pathlib.Path` or an `os.PathLike` object.
 Initial snapshots include regular files and empty directories. Symlinks and
 special files are skipped. By default, directory/file names `.git`, `.venv`,
 `venv`, `__pycache__`, `.mypy_cache`, `.pytest_cache`, `.ruff_cache` are excluded
-at any depth. Requires throng 0.0.3 or newer; exclusions can be passed through
+at any depth. Exclusions can be passed through
 the plugin slot or directly to `WasmManager`:
 
 ```python
