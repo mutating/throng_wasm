@@ -2,8 +2,8 @@ from pathlib import Path
 
 import pytest
 
-from throng_wasmtime.commands import list_directory
-from throng_wasmtime.runtime import command_arguments
+from throng_wasm.commands import list_directory
+from throng_wasm.runtime import command_arguments
 
 
 @pytest.fixture
@@ -79,6 +79,6 @@ def test_ls_end_of_options_and_directory_error(listing: Path, monkeypatch: pytes
 
 
 def test_missing_ls_resource_has_clear_error(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr('throng_wasmtime.runtime.get_data', lambda *_a: None)
+    monkeypatch.setattr('throng_wasm.runtime.get_data', lambda *_a: None)
     with pytest.raises(FileNotFoundError, match=r'commands\.py'):
         command_arguments('ls')

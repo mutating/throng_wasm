@@ -7,10 +7,10 @@ import pytest
 import wasmtime
 from cantok import SimpleToken, TimeoutToken
 
-from throng_wasmtime import WasmRuntime, runtime as runtime_module
-from throng_wasmtime.memory import MemoryPath
-from throng_wasmtime.runtime import command_arguments
-from throng_wasmtime.state import restore, snapshot
+from throng_wasm import WasmRuntime, runtime as runtime_module
+from throng_wasm.memory import MemoryPath
+from throng_wasm.runtime import command_arguments
+from throng_wasm.state import restore, snapshot
 
 
 @pytest.mark.parametrize(('command', 'expected'), [
@@ -162,7 +162,7 @@ def test_stop_running(wasm_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     def signal_start(*_args):
         started.set()
 
-    monkeypatch.setattr('throng_wasmtime.wasi.MemoryWasi.w_sched_yield', signal_start)
+    monkeypatch.setattr('throng_wasm.wasi.MemoryWasi.w_sched_yield', signal_start)
     with ThreadPoolExecutor() as executor:
         future = executor.submit(runtime.run, [], MemoryPath(), SimpleToken(), stopped)
         assert started.wait(5)

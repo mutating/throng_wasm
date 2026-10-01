@@ -2,7 +2,7 @@
 
 import pytest
 
-from throng_wasmtime import benchmarks
+from throng_wasm import benchmarks
 
 
 @pytest.fixture(scope='module')

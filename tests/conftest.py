@@ -2,7 +2,7 @@ from pathlib import Path
 
 import pytest
 
-from throng_wasmtime import WasmRuntime
+from throng_wasm import WasmRuntime
 
 
 @pytest.fixture

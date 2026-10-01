@@ -9,14 +9,14 @@ from unittest.mock import Mock
 import pytest
 
 from tests.test_installer import Index
-from throng_wasmtime import WasmIsolate, WasmResult, benchmarks
-from throng_wasmtime.benchmarks import checked_native, checked_wasm
+from throng_wasm import WasmIsolate, WasmResult, benchmarks
+from throng_wasm.benchmarks import checked_native, checked_wasm
 
 
 @pytest.fixture
 def index(monkeypatch: pytest.MonkeyPatch) -> Index:
     packages = Index()
-    monkeypatch.setattr('throng_wasmtime.installer.download', packages.download)
+    monkeypatch.setattr('throng_wasm.installer.download', packages.download)
     return packages
 
 

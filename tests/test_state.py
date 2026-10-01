@@ -5,8 +5,8 @@ from zipfile import ZIP_DEFLATED, BadZipFile, ZipFile, ZipInfo
 
 import pytest
 
-from throng_wasmtime.memory import MemoryPath
-from throng_wasmtime.state import restore, snapshot
+from throng_wasm.memory import MemoryPath
+from throng_wasm.state import restore, snapshot
 
 
 def test_roundtrip(tmp_path: Path) -> None:

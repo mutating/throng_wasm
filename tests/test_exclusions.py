@@ -14,9 +14,9 @@ import pytest
 from cantok import CancellationError, SimpleToken
 from throng import throng
 
-from throng_wasmtime import WasmIsolate, WasmManager, WasmRuntime
-from throng_wasmtime.memory import MemoryPath
-from throng_wasmtime.state import DEFAULT_EXCLUDE, restore, snapshot
+from throng_wasm import WasmIsolate, WasmManager, WasmRuntime
+from throng_wasm.memory import MemoryPath
+from throng_wasm.state import DEFAULT_EXCLUDE, restore, snapshot
 
 
 @pytest.mark.parametrize('storage', ['absolute', 'relative', 'dot', 'memory'])

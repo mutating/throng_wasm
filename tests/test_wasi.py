@@ -5,9 +5,9 @@ from types import SimpleNamespace
 import pytest
 import wasmtime
 
-from throng_wasmtime.memory import MemoryPath, Node
-from throng_wasmtime.state import snapshot
-from throng_wasmtime.wasi import (
+from throng_wasm.memory import MemoryPath, Node
+from throng_wasm.state import snapshot
+from throng_wasm.wasi import (
     ALL_RIGHTS,
     READ,
     WRITE,

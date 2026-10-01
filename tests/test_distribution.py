@@ -15,7 +15,7 @@ import pytest
 from packaging.requirements import Requirement
 from packaging.specifiers import SpecifierSet
 
-from throng_wasmtime.bootstrap import BUNDLE_RESOURCE, BUNDLE_SHA256
+from throng_wasm.bootstrap import BUNDLE_RESOURCE, BUNDLE_SHA256
 
 
 @pytest.fixture(scope='session')
@@ -26,7 +26,7 @@ def distribution_directory(tmp_path_factory: pytest.TempPathFactory) -> Path:
     source.mkdir()
     for name in ['pyproject.toml', 'README.md', 'LICENSE']:
         shutil.copy2(project / name, source / name)
-    shutil.copytree(project / 'throng_wasmtime', source / 'throng_wasmtime',
+    shutil.copytree(project / 'throng_wasm', source / 'throng_wasm',
                     ignore=shutil.ignore_patterns('__pycache__', '*.pyc'))
     # Each pytest worker builds in its own copy, without modifying the checkout.
     directory = workspace / 'dist'
@@ -41,20 +41,21 @@ def test_archives_contain_runtime_and_notices(distribution_directory: Path) -> N
     wheel, = distribution_directory.glob('*.whl')
     sdist, = distribution_directory.glob('*.tar.gz')
     with ZipFile(wheel) as archive:
-        data = archive.read(f'throng_wasmtime/{BUNDLE_RESOURCE}')
-        notices = archive.read('throng_wasmtime/data/RUNTIME_LICENSES.txt')
-        assert 'throng_wasmtime/py.typed' in archive.namelist()
+        data = archive.read(f'throng_wasm/{BUNDLE_RESOURCE}')
+        notices = archive.read('throng_wasm/data/RUNTIME_LICENSES.txt')
+        assert 'throng_wasm/py.typed' in archive.namelist()
         metadata_name, = [name for name in archive.namelist() if name.endswith('.dist-info/METADATA')]
         metadata = BytesParser().parsebytes(archive.read(metadata_name))
+        assert metadata['Name'] == 'throng-wasm'
         assert SpecifierSet(metadata['Requires-Python']) == SpecifierSet('>=3.8')
         requirements = {str(Requirement(value)) for value in metadata.get_all('Requires-Dist', [])}
         assert {'throng>=0.0.4', 'dirstree>=0.0.12', 'pathspec>=0.12.0', 'microbenchmark>=0.0.3'} <= requirements
         entry_points, = [name for name in archive.namelist() if name.endswith('.dist-info/entry_points.txt')]
         registration = ConfigParser()
         registration.read_string(archive.read(entry_points).decode())
-        assert dict(registration.items('throng')) == {'wasm': 'throng_wasmtime.plugin:wasm'}
-        assert 'throng_wasmtime/python-3.13.11-wasi_sdk-24.zip' not in archive.namelist()
-        assert 'throng_wasmtime/RUNTIME_LICENSES.txt' not in archive.namelist()
+        assert dict(registration.items('throng')) == {'wasm': 'throng_wasm.plugin:wasm'}
+        assert 'throng_wasm/python-3.13.11-wasi_sdk-24.zip' not in archive.namelist()
+        assert 'throng_wasm/RUNTIME_LICENSES.txt' not in archive.namelist()
     assert hashlib.sha256(data).hexdigest() == BUNDLE_SHA256
     assert b'PYTHON SOFTWARE FOUNDATION LICENSE VERSION 2' in notices
     with tarfile.open(sdist) as archive:
@@ -77,11 +78,11 @@ def forbidden(*args, **kwargs):
 socket.socket.connect = forbidden
 socket.create_connection = forbidden
 urllib.request.urlopen = forbidden
-import throng_wasmtime
-assert throng_wasmtime.__file__.startswith(sys.argv[1])
+import throng_wasm
+assert throng_wasm.__file__.startswith(sys.argv[1])
 from throng import throng
-from throng_wasmtime import WasmRuntime, WasmIsolate
-from throng_wasmtime.benchmarks import checked_wasm
+from throng_wasm import WasmRuntime, WasmIsolate
+from throng_wasm.benchmarks import checked_wasm
 managers = throng(exclude=['*.tmp'])
 assert 'wasmtime' not in managers
 manager = managers['wasm']

@@ -19,7 +19,7 @@ from throng.abstracts.results import RunResultProtocol
 from throng.errors import CannotInstallDependencyError
 
 from tests.test_installer import ENVIRONMENT, Index
-from throng_wasmtime import (
+from throng_wasm import (
     WasmIsolate,
     WasmManager,
     WasmResult,
@@ -27,7 +27,7 @@ from throng_wasmtime import (
     bootstrap,
     installer,
 )
-from throng_wasmtime.wasi import MemoryWasi
+from throng_wasm.wasi import MemoryWasi
 
 
 @pytest.fixture(scope='module')
@@ -50,7 +50,7 @@ def test_install_queries_exact_guest_environment_without_project_imports(tmp_pat
         cancellation.check()
         observed.append((packages, environment))
 
-    monkeypatch.setattr('throng_wasmtime.manager.install_packages', install)
+    monkeypatch.setattr('throng_wasm.manager.install_packages', install)
     with WasmManager(tmp_path, runtime=cpython).scope as isolate:
         isolate.install('example')
     assert observed == [(('example',), ENVIRONMENT)]
@@ -387,7 +387,7 @@ def test_installed_linters_survive_snapshot_without_reinstall(tmp_path: Path, cp
 
     monkeypatch.setattr(installer, 'download', forbidden)
     monkeypatch.setattr(urllib.request, 'urlopen', forbidden)
-    monkeypatch.setattr('throng_wasmtime.manager.install_packages', forbidden)
+    monkeypatch.setattr('throng_wasm.manager.install_packages', forbidden)
     empty_project = tmp_path / 'unrelated'
     empty_project.mkdir()
     # Use a new manager and runtime, with no external package directories.

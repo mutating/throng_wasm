@@ -15,14 +15,14 @@ from packaging.version import Version
 from throng.errors import CannotInstallDependencyError
 
 from tests.test_bootstrap import archive_bytes
-from throng_wasmtime import (
+from throng_wasm import (
     WasmIsolate,
     WasmManager,
     WasmResult,
     WasmRuntime,
     installer as module,
 )
-from throng_wasmtime.memory import MemoryPath
+from throng_wasm.memory import MemoryPath
 
 ENVIRONMENT = {
     'implementation_name': 'cpython', 'implementation_version': '3.13.11', 'os_name': 'posix',

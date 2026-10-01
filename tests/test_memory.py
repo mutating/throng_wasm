@@ -3,8 +3,8 @@ from pathlib import PurePosixPath
 
 import pytest
 
-from throng_wasmtime.memory import MemoryPath, Node
-from throng_wasmtime.state import restore, snapshot
+from throng_wasm.memory import MemoryPath, Node
+from throng_wasm.state import restore, snapshot
 
 
 def test_tree_and_snapshot() -> None:

@@ -8,7 +8,7 @@ from zipfile import ZipFile
 
 import pytest
 
-from throng_wasmtime import WasmManager, bootstrap
+from throng_wasm import WasmManager, bootstrap
 
 
 def archive_bytes(files: Dict[str, bytes]) -> bytes:
@@ -37,7 +37,7 @@ def bundle_assets(monkeypatch: pytest.MonkeyPatch) -> bytes:
 def test_resource_and_hash(monkeypatch: pytest.MonkeyPatch) -> None:
     data = b'pinned bytes'
     def get_data(package: str, resource: str) -> bytes:
-        assert package == 'throng_wasmtime'
+        assert package == 'throng_wasm'
         assert resource == bootstrap.BUNDLE_RESOURCE
         return data
 
@@ -63,7 +63,7 @@ def test_load_once_per_process(monkeypatch: pytest.MonkeyPatch, bundle_assets: b
     with ThreadPoolExecutor(max_workers=2) as executor:
         results = list(executor.map(lambda _: bootstrap.ensure_bundle(), range(2)))
     assert results[0] is results[1]
-    assert reads == [('throng_wasmtime', bootstrap.BUNDLE_RESOURCE)]
+    assert reads == [('throng_wasm', bootstrap.BUNDLE_RESOURCE)]
     assert (results[0] / 'python.wasm').read_bytes().startswith(b'(module')
     assert bootstrap.ensure_bundle() is results[0]
 

@@ -20,10 +20,10 @@ from cantok import (
     TimeoutToken,
 )
 
-from throng_wasmtime import WasmIsolate, WasmManager, WasmResult, WasmRuntime
-from throng_wasmtime.memory import MemoryPath
-from throng_wasmtime.state import restore, snapshot
-from throng_wasmtime.wasi import MemoryWasi
+from throng_wasm import WasmIsolate, WasmManager, WasmResult, WasmRuntime
+from throng_wasm.memory import MemoryPath
+from throng_wasm.state import restore, snapshot
+from throng_wasm.wasi import MemoryWasi
 
 
 @pytest.mark.parametrize('owner', ['isolate', 'runtime', 'manager'])
@@ -142,7 +142,7 @@ def test_non_command_operations_accept_tokens(tmp_path: Path, runtime: WasmRunti
 
 def test_cancelled_manager_does_not_snapshot(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     manager = WasmManager(tmp_path)
-    monkeypatch.setattr('throng_wasmtime.manager.snapshot', lambda *_a, **_k: pytest.fail('Snapshot started'))
+    monkeypatch.setattr('throng_wasm.manager.snapshot', lambda *_a, **_k: pytest.fail('Snapshot started'))
     assert manager.run('python', SimpleToken(cancelled=True)).killed_by_token
 
 
@@ -217,7 +217,7 @@ def test_cancel_slow_host_snapshot(tmp_path: Path, monkeypatch: pytest.MonkeyPat
         finally:
             finished.set()
 
-    monkeypatch.setattr('throng_wasmtime.manager.snapshot', slow_snapshot)
+    monkeypatch.setattr('throng_wasm.manager.snapshot', slow_snapshot)
     with ThreadPoolExecutor() as executor:
         pending = executor.submit(WasmManager(tmp_path).read, token=token)
         try:
@@ -236,7 +236,7 @@ def test_cancel_short_guest_before_watchdog_first_poll(wasm_home: Path, monkeypa
       (memory (export "memory") 1)
       (func (export "_start") (drop (call $ready))))''')
     token = SimpleToken()
-    monkeypatch.setattr('throng_wasmtime.wasi.MemoryWasi.w_sched_yield', lambda *_a: token.cancel())
+    monkeypatch.setattr('throng_wasm.wasi.MemoryWasi.w_sched_yield', lambda *_a: token.cancel())
     result = WasmRuntime(wasm_home).run([], MemoryPath(), token, Event())
     assert result.killed_by_token
     assert result.returncode == 130

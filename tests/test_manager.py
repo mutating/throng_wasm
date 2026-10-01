@@ -9,8 +9,8 @@ from zipfile import BadZipFile
 import pytest
 from cantok import SimpleToken
 
-from throng_wasmtime import WasmIsolate, WasmManager, WasmRuntime
-from throng_wasmtime.state import restore, snapshot
+from throng_wasm import WasmIsolate, WasmManager, WasmRuntime
+from throng_wasm.state import restore, snapshot
 
 
 def test_snapshots_and_lifecycle(tmp_path: Path, runtime: WasmRuntime) -> None:
@@ -88,7 +88,7 @@ def test_plugin_discovery(tmp_path: Path) -> None:
     env = dict(os.environ)
     env.pop('THRONG_WASM_HOME', None)
     result = subprocess.run(
-        [sys.executable, '-c', 'from throng import throng; from throng_wasmtime import WasmManager; managers = throng(); assert isinstance(managers["wasm"], WasmManager); assert "wasmtime" not in managers'],
+        [sys.executable, '-c', 'from throng import throng; from throng_wasm import WasmManager; managers = throng(); assert isinstance(managers["wasm"], WasmManager); assert "wasmtime" not in managers'],
         cwd=tmp_path, env=env, capture_output=True, text=True, check=False,
     )
     assert result.returncode == 0, result.stderr
@@ -107,7 +107,7 @@ def test_kill_running_isolate(tmp_path: Path, wasm_home: Path, monkeypatch: pyte
     def signal_start(*_args):
         started.set()
 
-    monkeypatch.setattr('throng_wasmtime.wasi.MemoryWasi.w_sched_yield', signal_start)
+    monkeypatch.setattr('throng_wasm.wasi.MemoryWasi.w_sched_yield', signal_start)
     with ThreadPoolExecutor() as executor:
         future = executor.submit(isolate.run, 'python')
         assert started.wait(5)
