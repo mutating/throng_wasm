@@ -1,4 +1,4 @@
-# throng-wasm
+![logo](https://raw.githubusercontent.com/mutating/throng_wasm/develop/docs/assets/logo_1.svg)
 
 A [throng](https://github.com/mutating/throng) plugin for running **CPython
 `wasm32-wasi` / `wasm32-wasip1`** commands in Wasmtime. Mypy and Pyflakes run
