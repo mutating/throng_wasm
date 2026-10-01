@@ -3,7 +3,7 @@ requires = ["setuptools==68.0.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "throng_wasmtime"
+name = "throng-wasm"
 version = "0.0.1"
 authors = [
   { name="Evgeniy Blinov", email="zheni-b@yandex.ru" },
@@ -51,20 +51,20 @@ keywords = [
 ]
 
 [tool.setuptools.package-data]
-"throng_wasmtime" = ["py.typed", "data/python-3.13.11-wasi_sdk-24.zip", "data/RUNTIME_LICENSES.txt"]
+"throng_wasm" = ["py.typed", "data/python-3.13.11-wasi_sdk-24.zip", "data/RUNTIME_LICENSES.txt"]
 
 [tool.setuptools.packages.find]
-include = ["throng_wasmtime*"]
+include = ["throng_wasm*"]
 
 [tool.mutmut]
-paths_to_mutate=["throng_wasmtime"]
+paths_to_mutate=["throng_wasm"]
 
 [tool.coverage.run]
 branch = "${THRONG_COVERAGE_BRANCH-false}"
 omit = ["*tests*"]
 parallel = true
 plugins = ["coverage_pyver_pragma"]
-source = ["throng_wasmtime"]
+source = ["throng_wasm"]
 
 [tool.pytest.ini_options]
 norecursedirs = ["build", "mutants"]
@@ -76,7 +76,7 @@ lint.isort.combine-as-imports = true
 format.quote-style = "single"
 
 [project.entry-points.throng]
-wasm = "throng_wasmtime.plugin:wasm"
+wasm = "throng_wasm.plugin:wasm"
 
 [project.urls]
 'Source' = 'https://github.com/mutating/throng_local_wasm'
