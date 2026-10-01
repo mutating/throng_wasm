@@ -1,4 +1,4 @@
-# throng_wasmtime
+# throng-wasm
 
 A [throng](https://github.com/mutating/throng) plugin for running **CPython
 `wasm32-wasi` / `wasm32-wasip1`** commands in Wasmtime. Mypy and Pyflakes run
@@ -18,7 +18,7 @@ with throng('my_project')['wasm'].scope as isolate:
 
 No environment variables, manual runtime installation or runtime downloads are
 required. The CPython WASI archive is included in the Python package under
-`throng_wasmtime/data/` and ships in both wheel and source distributions.
+`throng_wasm/data/` and ships in both wheel and source distributions.
 The first command verifies its SHA-256 and unpacks it **into memory**.
 Project files, installed packages, guest temporary files and command output also
 stay in memory. The plugin creates no temporary host files, directories or disk
@@ -38,7 +38,7 @@ The plugin prepares its bundled runtime automatically on the first command.
 The archive comes from the CPython maintainer's GitHub release and is included
 unchanged in this repository and the installed package. It occupies approximately
 13.1 MiB compressed; the unpacked files contain approximately 37 MiB of data.
-The [provenance and third-party licenses](throng_wasmtime/data/RUNTIME_LICENSES.txt)
+The [provenance and third-party licenses](throng_wasm/data/RUNTIME_LICENSES.txt)
 ship beside the archive. A thread lock protects preparation; only a complete
 runtime becomes available, shared within the host process.
 
@@ -190,7 +190,7 @@ versions and plugins may depend on unavailable operating-system features.
 A custom runtime can also be supplied directly:
 
 ```python
-from throng_wasmtime import WasmManager, WasmRuntime
+from throng_wasm import WasmManager, WasmRuntime
 
 runtime = WasmRuntime(
     'venv/wasi/runtime',
@@ -256,7 +256,7 @@ manager = throng('my_project', exclude=['/private/', '*.tmp', '!results/keep.tmp
 `exclude=None` keeps the defaults above. An explicit list replaces the defaults;
 `exclude=[]` includes all regular files and directories. To extend the defaults,
 pass `[*DEFAULT_EXCLUDE, 'private/']` after importing `DEFAULT_EXCLUDE` from
-`throng_wasmtime.state`.
+`throng_wasm.state`.
 
 Rules use dirstree's `gitwildmatch` syntax (via pathspec), in order; the last
 matching rule wins. Paths are relative to the project root, use `/` separators,
@@ -447,7 +447,7 @@ coverage erase
 THRONG_COVERAGE_BRANCH=true coverage run -m pytest
 coverage combine
 coverage report -m --fail-under=100
-ruff check throng_wasmtime tests
+ruff check throng_wasm tests
 ```
 
 The existing CI also runs strict mypy checks. The target is 100% statement **and
@@ -456,14 +456,14 @@ The guest's CPython/linter implementations are not included in that number.
 The typing-only callback protocol signature has no implementation and is excluded
 from runtime coverage.
 
-Reusable scenarios live in `throng_wasmtime.benchmarks` and use
+Reusable scenarios live in `throng_wasm.benchmarks` and use
 [microbenchmark](https://github.com/mutating/microbenchmark), following
 [suby's benchmark organization](https://github.com/mutating/suby/blob/main/suby/benchmarks.py).
 Preparation installs the linters and creates identical project corpora before any
 timing starts. The context owns and cleans up the isolates and native fixture files:
 
 ```python
-from throng_wasmtime import benchmarks
+from throng_wasm import benchmarks
 
 with benchmarks.prepare(number=10) as suite:
     result = suite.scenarios['mypy.100_files.wasm_reused'].run(warmup=2)
