@@ -5,7 +5,7 @@ from threading import Event, Thread
 
 import pytest
 import wasmtime
-from cantok import SimpleToken, TimeoutToken
+from cantok import SimpleToken
 
 from throng_wasm import WasmRuntime, runtime as runtime_module
 from throng_wasm.memory import MemoryPath
@@ -139,15 +139,33 @@ def test_cancel_before_start(runtime: WasmRuntime) -> None:
     assert result.returncode is None
 
 
-def test_cancel_loop_and_reuse(wasm_home: Path) -> None:
-    (wasm_home / 'python.wasm').write_text('(module (func (export "_start") (loop $spin br $spin)))')
+def test_cancel_loop_and_reuse(wasm_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    (wasm_home / 'python.wasm').write_text('''(module
+      (import "wasi_snapshot_preview1" "sched_yield" (func $ready (result i32)))
+      (memory (export "memory") 1)
+      (func (export "_start") (drop (call $ready)) (loop $spin br $spin)))''')
     runtime = WasmRuntime(wasm_home)
+    runtime._load()
+    assert runtime._engine is not None
+    started = Event()
+    monkeypatch.setattr('throng_wasm.wasi.MemoryWasi.w_sched_yield', lambda *_a: started.set())
     # A second invocation must get a fresh epoch deadline after the first trap.
-    for _ in range(2):
-        result = runtime.run([], MemoryPath(), TimeoutToken(0.1), Event())
-        assert result.returncode == 130
-        assert result.killed_by_token
-        assert not result.success
+    with ThreadPoolExecutor(max_workers=1) as executor:
+        for _ in range(2):
+            started.clear()
+            token = SimpleToken()
+            pending = executor.submit(runtime.run, [], MemoryPath(), token, Event())
+            try:
+                assert started.wait(5)
+                token.cancel()
+                result = pending.result(timeout=5)
+                assert result.returncode == 130
+                assert result.killed_by_token
+                assert not result.success
+            finally:
+                token.cancel()
+                if not pending.done():
+                    runtime._engine.increment_epoch()
 
 
 def test_stop_running(wasm_home: Path, monkeypatch: pytest.MonkeyPatch) -> None:
