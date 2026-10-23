@@ -5,7 +5,7 @@ from contextlib import contextmanager
 from threading import Event, RLock, Thread
 from typing import Callable, Generic, Iterator, Optional, Protocol, TypeVar
 
-from cantok import AbstractToken
+from cantok import AbstractToken, ConditionToken
 
 T = TypeVar('T')
 POLL_INTERVAL = 0.01
@@ -46,6 +46,16 @@ class Cancellation:
         self.token, self.stopped = token, stopped
         self.error: Optional[BaseException] = None
         self._lock = RLock()
+
+    def as_token(self) -> AbstractToken:
+        """Carry this operation's latched error through throng's token API."""
+        def condition() -> bool:
+            self.check()
+            return False
+
+        # Preserve the original exception (and its originating token). A fresh
+        # public operation gets a fresh Cancellation, never a stored token.
+        return ConditionToken(condition, caching=False, suppress_exceptions=False)
 
     def check(self) -> None:
         with self._lock:
