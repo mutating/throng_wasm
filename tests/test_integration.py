@@ -16,7 +16,12 @@ import pytest
 from cantok import SimpleToken, TimeoutToken
 from throng import throng
 from throng.abstracts.results import RunResultProtocol
-from throng.errors import CannotInstallDependencyError
+from throng.errors import (
+    CannotInstallDependencyError,
+    InterruptedInstallationError,
+    NotSuccessfulRunError,
+    PreparationCommandFailedError,
+)
 
 from tests.test_installer import ENVIRONMENT, Index
 from throng_wasm import (
@@ -39,6 +44,91 @@ def test_entrypoint_in_process(tmp_path: Path) -> None:
     managers = throng(tmp_path)
     assert isinstance(managers['wasm'], WasmManager)
     assert 'wasmtime' not in managers
+
+
+@pytest.mark.parametrize('access', ['get', 'scope', 'run', 'chain'])
+def test_manager_packages_and_prepare_in_real_guest(tmp_path: Path, cpython: WasmRuntime,
+                                                   monkeypatch: pytest.MonkeyPatch, access: str) -> None:
+    index = Index()
+    index.add('example')
+    monkeypatch.setattr(installer, 'download', index.download)
+    prepare = [
+        'python -c "import example, sys; assert sys.platform == \'wasi\'; open(\'prepared\', \'a\').write(example.VERSION)"',
+        'python -c "open(\'prepared\', \'a\').write(\';\')"',
+    ]
+    manager = throng(tmp_path, packages=['example==1.0'], prepare=prepare)['wasm']
+    assert isinstance(manager, WasmManager)
+    manager.runtime = cpython
+    assert index.requests == []
+    command = 'python -c "print(open(\'prepared\').read())"'
+    results: List[RunResultProtocol]
+    if access == 'run':
+        results = [manager.run(command, exception=True)]
+    elif access == 'chain':
+        results = manager.chain(command, command, exception=True)
+    else:
+        with ExitStack() as stack:
+            isolate = manager.get(manager.read()) if access == 'get' else stack.enter_context(manager.scope)
+            stack.callback(isolate.kill)
+            results = [isolate.run(command, exception=True)]
+    assert all(result.stdout == '1.0;\n' for result in results)
+    assert not (tmp_path / 'prepared').exists()
+    assert prepare == manager.prepare
+    assert index.requests
+
+
+def test_restored_manager_repeats_setup_offline(tmp_path: Path, cpython: WasmRuntime, monkeypatch: pytest.MonkeyPatch) -> None:
+    index = Index()
+    index.add('example')
+    monkeypatch.setattr(installer, 'download', index.download)
+    manager = WasmManager(tmp_path, runtime=cpython, packages=['example'], prepare=[
+        'python -c "import example; open(\'prepared\', \'a\').write(example.VERSION + \';\')"',
+    ])
+    with manager.scope as isolate:
+        saved = isolate.read()
+    monkeypatch.setattr(installer, 'download', lambda *_a: pytest.fail('Restored package downloaded again'))
+    restored = manager.get(saved)
+    try:
+        assert restored.run('python -c "print(open(\'prepared\').read())"').stdout == '1.0;1.0;\n'
+    finally:
+        restored.kill()
+    # A manager without setup restores only the saved state.
+    plain = WasmManager(tmp_path, runtime=cpython).get(saved)
+    try:
+        assert plain.run('python -c "print(open(\'prepared\').read())"').stdout == '1.0;\n'
+    finally:
+        plain.kill()
+
+
+@pytest.mark.parametrize('stage', ['install', 'prepare'])
+def test_real_setup_failure_never_runs_user_command(tmp_path: Path, cpython: WasmRuntime,
+                                                  monkeypatch: pytest.MonkeyPatch, stage: str) -> None:
+    index = Index()
+    index.add('native', tag='cp313-cp313-manylinux_2_17_x86_64')
+    monkeypatch.setattr(installer, 'download', index.download)
+    manager = WasmManager(tmp_path, runtime=cpython,
+                          packages=['native'] if stage == 'install' else None,
+                          prepare=['python -c "import sys; print(\'setup failure\'); sys.exit(7)"'])
+    created = []
+    create = manager._get
+
+    def record(*args, **kwargs):
+        isolate = create(*args, **kwargs)
+        created.append(isolate)
+        return isolate
+
+    monkeypatch.setattr(manager, '_get', record)
+    expected = InterruptedInstallationError if stage == 'install' else PreparationCommandFailedError
+    with pytest.raises(expected) as caught:
+        manager.run('unsupported user command', exception=False)
+    assert len(created) == 1
+    assert not created[0].path.exists()
+    if stage == 'install':
+        assert isinstance(caught.value.__cause__, CannotInstallDependencyError)
+    else:
+        assert isinstance(caught.value.__cause__, NotSuccessfulRunError)
+        assert caught.value.__cause__.result.returncode == 7
+        assert caught.value.__cause__.result.stdout == 'setup failure\n'
 
 
 def test_install_queries_exact_guest_environment_without_project_imports(tmp_path: Path, cpython: WasmRuntime, monkeypatch: pytest.MonkeyPatch) -> None:

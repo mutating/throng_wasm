@@ -304,10 +304,10 @@ def test_commit_failure_rolls_back(index: Index, isolate: WasmIsolate, monkeypat
 
 
 def test_interpreter_failure(isolate: WasmIsolate, monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setattr(isolate, '_run', lambda _command, _cancellation: WasmResult(False, stderr='interpreter failed'))
+    monkeypatch.setattr(isolate, '_execute', lambda _command, _cancellation: WasmResult(False, stderr='interpreter failed'))
     with pytest.raises(CannotInstallDependencyError, match='interpreter failed'):
         isolate.install('tool')
-    monkeypatch.setattr(isolate, '_run', lambda _command, _cancellation: WasmResult(True, stdout=None))
+    monkeypatch.setattr(isolate, '_execute', lambda _command, _cancellation: WasmResult(True, stdout=None))
     with pytest.raises(CannotInstallDependencyError, match='Cannot inspect'):
         isolate.install('tool')
 

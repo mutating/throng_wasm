@@ -49,7 +49,7 @@ def test_archives_contain_runtime_and_notices(distribution_directory: Path) -> N
         assert metadata['Name'] == 'throng-wasm'
         assert SpecifierSet(metadata['Requires-Python']) == SpecifierSet('>=3.8')
         requirements = {str(Requirement(value)) for value in metadata.get_all('Requires-Dist', [])}
-        assert {'throng>=0.0.4', 'dirstree>=0.0.12', 'pathspec>=0.12.0', 'microbenchmark>=0.0.3'} <= requirements
+        assert {'throng>=0.0.10', 'dirstree>=0.0.12', 'pathspec>=0.12.0', 'microbenchmark>=0.0.3'} <= requirements
         entry_points, = [name for name in archive.namelist() if name.endswith('.dist-info/entry_points.txt')]
         registration = ConfigParser()
         registration.read_string(archive.read(entry_points).decode())
@@ -87,6 +87,11 @@ managers = throng(exclude=['*.tmp'])
 assert 'wasmtime' not in managers
 manager = managers['wasm']
 with manager.scope as isolate:
+    assert isolate.meta.id == isolate.get_id()
+    assert isolate.meta.resources.benchmarks.single_core is None
+    assert isolate.meta.resources.benchmarks.multi_core is None
+    assert isolate.meta.resources.shared is True
+    assert isolate.meta.resources.shared_with is None
     checked_wasm(isolate, 'python -c pass')
     result = isolate.run('python -c "import sys; print(sys.platform)"')
     assert result.success, result.stderr
