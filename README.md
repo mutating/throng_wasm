@@ -27,7 +27,7 @@ add dependencies to that isolate. `ls` also runs inside WASM.
 
 ## Installation and runtime
 
-Requires throng 0.0.4 or newer. Host Python: 3.8 or newer, on a platform supported by the Wasmtime Python wheel.
+Requires throng 0.0.10 or newer. Host Python: 3.8 or newer, on a platform supported by the Wasmtime Python wheel.
 Install this repository with `python -m pip install -e .` or `uv pip install -e .`.
 The `throng` entry point discovers `wasm` automatically. The Wasmtime
 Python library is installed as a dependency; the Wasmtime CLI is not required.
@@ -119,6 +119,44 @@ network request. Do not use that reserved name for project files.
 three scripts. The memory filesystem supplies a working virtual `/dev/null`,
 but the guest still lacks `multiprocessing`, which dill imports.
 
+### Preparing every isolate
+
+Use throng's `packages` and `prepare` options to configure each new isolate:
+
+```python
+from cantok import TimeoutToken
+from throng import throng
+
+manager = throng(
+    'my_project',
+    packages=['mypy==1.14.1', 'pyflakes==3.3.2'],
+    prepare=['python -c "from pathlib import Path; Path(\'results\').mkdir(exist_ok=True)"'],
+)['wasm']
+
+with manager.scope(token=TimeoutToken(60)) as isolate:
+    result = isolate.run('pyflakes .', exception=True)
+```
+
+The same options are accepted by `WasmManager`. Configuration is lazy: selecting
+a manager does not read the project, install packages or run preparation.
+Every `get()`, scope entry, `manager.run()` and `manager.chain()` first restores
+the snapshot, then installs all configured packages through the WASM installer,
+then executes preparation commands in order. Preparation finishes before the
+isolate is exposed or any user command runs. It uses the same command syntax
+and WASI restrictions as `run()`; shell commands and guest pip are not supported.
+
+Preparation also runs when `get(saved_state)` restores an existing snapshot.
+Make preparation commands safe to repeat. Already satisfied explicit package
+requirements are reused offline. A manager without `packages` or `prepare`
+restores the snapshot without these extra steps.
+
+A failed package installation destroys the new isolate and raises
+`throng.errors.InterruptedInstallationError`, with the original installation or
+cancellation exception in `__cause__`. Failed or cancelled preparation destroys
+it and raises `PreparationCommandFailedError`, also preserving the cause.
+These setup errors are raised even when the user command uses `exception=False`.
+`KeyboardInterrupt` and `SystemExit` propagate after cleanup.
+
 ### Memory-only storage
 
 Wasmtime's [`Module(engine, bytes)`](https://github.com/bytecodealliance/wasmtime-py/blob/38.0.0/wasmtime/_module.py)
@@ -200,8 +238,9 @@ manager = WasmManager('my_project', runtime=runtime)
 print(manager.run('python -c "import sys; print(sys.platform)"').stdout)  # wasi
 ```
 
-Creating/selecting a manager or isolate does not read the bundled archive or
-compile CPython. Optional environment overrides are read on the first `get()`;
+Creating/selecting a manager does not read the bundled archive or compile
+CPython. Creating an isolate without configured packages or preparation also
+leaves the runtime unloaded. Optional environment overrides are read on the first `get()`;
 in-memory preparation and compilation happen on the first valid command (including the interpreter query performed by `install()`).
 An explicit `THRONG_WASM_HOME` disables automatic preparation; in that case
 use `isolate.install(...)` or provide `THRONG_WASM_PACKAGES` if linters are needed.
@@ -238,10 +277,19 @@ Every command gets a fresh interpreter, linear memory and in-memory `/tmp`.
 Project file changes persist between commands **in the same isolate**, including
 mypy's incremental cache. The original project is unchanged. `isolate.read()`
 returns a ZIP snapshot of the current project files; `manager.get(state)`
-restores exactly that snapshot. `manager.scope`, `manager.run()`, `chain()` and
+restores that snapshot and then applies any configured packages and preparation.
+`manager.scope`, `manager.run()`, `chain()` and
 cancellation tokens follow throng's API. `kill()` is idempotent; running or
 reading after destruction raises `RuntimeError`. The internal `isolate.path`
 is now a virtual path, not a host `pathlib.Path` or an `os.PathLike` object.
+
+`isolate.meta.id` (also returned by `get_id()`) is unique to each isolate and
+stable throughout its lifetime. Restoring a snapshot creates a new ID.
+`isolate.meta.resources` reports `shared=True` and `shared_with=None`: isolates
+share the host's computing resources, and the other users of those resources
+are unknown. No resource benchmarks are run; both
+`resources.benchmarks.single_core` and `resources.benchmarks.multi_core` are
+`None`. Reading metadata does not initialize the runtime or execute guest code.
 
 Initial snapshots include regular files and empty directories. Symlinks and
 special files are skipped. By default, directory/file names `.git`, `.venv`,
@@ -303,6 +351,22 @@ output; an interrupted command returns `130`. A WASM trap returns `1` with its
 diagnostic in stderr. Configuration errors, invalid modules and missing runtime
 files raise exceptions rather than masquerading as linter results.
 
+Both managers and isolates accept `exception` in `run()` and `chain()`.
+The default `exception=False` returns unsuccessful results and continues a chain
+after command failures. With `exception=True`, an unsuccessful command raises
+`throng.errors.NotSuccessfulRunError`; its `result` attribute retains the
+`WasmResult`, including output, exit code and `killed_by_token`. A chain stops
+at that failure. Cancellation before the next chain command raises
+`InterruptedChainError`; cancellation during a command produces a failed result
+and therefore `NotSuccessfulRunError`. A cancelled manager `run()` before
+execution also raises `NotSuccessfulRunError` when requested.
+
+You can pass an exception class or instance instead, for example
+`isolate.run('pyflakes .', exception=ValueError)`. Instances are raised unchanged;
+classes receive the failure message. The policy applies only to unsuccessful
+command results and skipped chain commands. Existing execution/configuration
+exceptions propagate unchanged, and setup errors retain the types described above.
+
 ### Running pytest
 
 Pytest 9.1.1 runs inside the guest with these explicit WASI-compatible options:
@@ -350,8 +414,9 @@ Calls sharing one runtime are serialized, including across its isolates, so
 cancelling one command does not cancel another store. Separate `WasmRuntime`
 objects allow concurrent execution. Tokens cover `run()` and `chain()` from
 snapshot preparation through execution, including mutex waits. The plugin also
-accepts an optional keyword-only `token` in `manager.read()`, `manager.get()`,
-`isolate.read()`, `isolate.install()`, and the `WasmIsolate` constructor:
+accepts an optional keyword-only `token` in `manager.read()`, `isolate.read()`,
+`isolate.install()`, and the `WasmIsolate` constructor. `manager.get(state, token)`
+accepts the token positionally or by keyword, as does `manager.scope(token)`:
 
 ```python
 from cantok import CancellationError, TimeoutToken
@@ -369,16 +434,27 @@ with manager.scope as isolate:
 ```
 
 Command cancellation returns `WasmResult`: before execution, `returncode=None`;
-after execution starts, `returncode=130`. `chain()` returns a result for every
-command and skips remaining commands after cancellation. Non-command operations
-raise the original cantok cancellation exception, including its specific type
-and originating token. Package installation errors still raise
-`CannotInstallDependencyError`. Unsuppressed token callback exceptions propagate
+after execution starts, `returncode=130` (unless an exception policy is requested).
+By default, `chain()` returns a result for every
+command and skips remaining commands after cancellation. Direct `read()` and
+`isolate.install()` calls, and cancellation while creating the isolate, raise
+the original cantok cancellation exception, including its specific type and
+originating token. Direct package installation errors still raise
+`CannotInstallDependencyError`. Configured installation and preparation use the
+setup exceptions described above. Unsuppressed token callback exceptions propagate
 to the caller after stopping the guest; they never silently disable cancellation.
 The first cancellation is latched for the entire operation or chain, including
 with `ConditionToken(caching=False)`. A subsequent separate call uses a fresh
 cancellation state. `CounterToken` counts token checks, not commands; the number
 of checks depends on preparation work and scheduling.
+
+`scope(token=...)` covers snapshot reading, isolate creation, package installation
+and preparation. It does not set the default token for commands inside the block;
+pass `token` to those commands explicitly when needed. A scope token can only be
+configured once. `manager.run()` and `manager.chain()` share cancellation across
+snapshot reading, all setup stages and user commands. Cancellation during setup
+uses the setup exceptions described above; direct `isolate.install()` continues
+to raise the original cantok cancellation exception.
 
 Waiting operations and running WASM check tokens at approximately 10 ms intervals;
 file processing also checks between files and chunks. Running WASM uses
